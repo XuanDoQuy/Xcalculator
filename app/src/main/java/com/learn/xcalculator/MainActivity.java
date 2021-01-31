@@ -1,13 +1,16 @@
 package com.learn.xcalculator;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> listButton;
     KeyBoardAdapter adapter;
     TextView txtInput, txtResult;
+    Button btnExit, btnAbout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.keybroadContainer);
         txtInput = findViewById(R.id.textInput);
         txtResult = findViewById(R.id.textViewResult);
+        btnExit = findViewById(R.id.buttonExit);
+        btnAbout = findViewById(R.id.buttonAbout);
         initKeyBoard();
         txtInput.setMovementMethod(new ScrollingMovementMethod());
 
@@ -61,9 +67,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         break;
                     case "-":
-                        if (ex.isEmpty()) {
-                            txtInput.append(temp);
-                        } else if (ex.charAt(ex.length() - 1) != '+' || ex.charAt(ex.length() - 1) != '-') {
+                        if (ex.isEmpty()||ex.charAt(ex.length()-1)!='-') {
                             txtInput.append(temp);
                         }
                         break;
@@ -98,9 +102,48 @@ public class MainActivity extends AppCompatActivity {
                         }
                         txtInput.setText(String.valueOf(curEx));
                         break;
+                    case "(":
+                        txtInput.append(temp);
+                        break;
+                    case ")":
+                        txtInput.append(temp);
+                        break;
                 }
             }
         });
+
+        btnExit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialogExit();
+            }
+        });
+
+        btnAbout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "App Xcalculator!", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showDialogExit() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        builder.setPositiveButton("Exit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.setMessage("Do you want to exit?");
+        dialog.show();
     }
 
     private void initKeyBoard() {
@@ -122,8 +165,8 @@ public class MainActivity extends AppCompatActivity {
         listButton.add("-");
         listButton.add("0");
         listButton.add(".");
-        listButton.add("e");
-        listButton.add("ans");
+        listButton.add("(");
+        listButton.add(")");
         listButton.add("=");
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 5);
         recyclerView.setLayoutManager(gridLayoutManager);
@@ -206,12 +249,14 @@ public class MainActivity extends AppCompatActivity {
             if (!isOperator(s.charAt(i)) && !isBracket(s.charAt(i))) {
                 temp.append(s.charAt(i));
             } else {
-                vs.add(String.valueOf(temp));
-                temp.setLength(0);
+                if (temp.length() != 0) {
+                    vs.add(String.valueOf(temp));
+                    temp.setLength(0);
+                }
                 vs.add(String.valueOf(s.charAt(i)));
             }
         }
-        vs.add(String.valueOf(temp));
+        if (temp.length()!=0) vs.add(String.valueOf(temp));
         Log.d(TAG, "splitString:" + vs);
         return vs;
     }
@@ -234,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
                 continue;
             }
             if (ex.get(i).charAt(0) == ')') {
-                while (!st.empty() || st.peek() != '(') {
+                while (!st.empty() && st.peek() != '(') {
                     res.add(String.valueOf(st.peek()));
                     st.pop();
                 }
@@ -246,8 +291,8 @@ public class MainActivity extends AppCompatActivity {
         while (!st.empty()) {
             if (st.peek() != '(' && st.peek() != ')') {
                 res.add(String.valueOf(st.peek()));
-                st.pop();
             }
+            st.pop();
         }
         Log.d(TAG, "convertToPostfix:" + res);
         return res;
